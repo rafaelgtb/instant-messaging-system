@@ -1,0 +1,767 @@
+openapi: 3.0.3
+info:
+  title: Instant Messaging App API
+  description: API for managing users, channels, messages and invitations
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+    description: Local server
+paths:
+  /auth/register:
+    post:
+      summary: Register a new user
+      description: Creates a new user with the provided username and password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '201':
+          description: User created successfully
+          headers:
+            Location:
+              description: URL of the created user
+              schema:
+                type: string
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Username already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /auth/login:
+    post:
+      summary: Login a user
+      description: Authenticates a user and returns a token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserInput'
+      responses:
+        '200':
+          description: User authenticated successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "token_value"
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /auth/logout:
+    post:
+      summary: Logout the user
+      description: Revokes the user's authentication token
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '204':
+          description: User logged out successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /users/me:
+    get:
+      summary: Get current user information
+      description: Retrieves information about the authenticated user
+      security:
+        - BearerAuth: [ ]
+      responses:
+        '200':
+          description: User information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserHomeOutput'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /users/{userId}/channels:
+    get:
+      summary: Get channels for a user
+      description: Retrieves the list of channels the user has joined
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the user
+      responses:
+        '200':
+          description: Channels retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels:
+    get:
+      summary: Get list of channels
+      description: Retrieves a list of channels based on the query parameter
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: query
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Query string to search for channels
+      responses:
+        '200':
+          description: Channels retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Channel'
+        '400':
+          description: Invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    post:
+      summary: Create a new channel
+      description: Creates a new channel with the provided name and visibility
+      security:
+        - BearerAuth: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChannelInput'
+      responses:
+        '201':
+          description: Channel created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '409':
+          description: Channel already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels/{channelId}:
+    get:
+      summary: Get channel by ID
+      description: Retrieves the details of a specific channel by its ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+      responses:
+        '200':
+          description: Channel retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Channel'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels/{channelId}/join:
+    post:
+      summary: Join a channel by ID
+      description: Allows a user to join a specific channel by its ID
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JoinChannelInput'
+      responses:
+        '200':
+          description: User joined the channel successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "Joined channel successfully"
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels/{channelId}/leave:
+    post:
+      summary: Remove a user from a channel
+      description: Removes a specific user from a specific channel
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: integer
+              format: int64
+              description: Unique identifier for the user
+      responses:
+        '200':
+          description: User removed from the channel successfully
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "User removed from channel successfully"
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels/{channelId}/messages:
+    get:
+      summary: Get messages in a channel
+      description: Retrieves a list of messages in the specified channel
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 50
+          description: Maximum number of items to return
+        - name: offset
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int32
+            default: 0
+          description: Number of items to skip before starting to collect the result set
+      responses:
+        '200':
+          description: Messages retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid query parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+    post:
+      summary: Create a new message in a channel
+      description: Creates a new message in the specified channel
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: Content of the message
+      responses:
+        '201':
+          description: Message created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel or user not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+
+  /channels/{channelId}/invitations:
+    post:
+      summary: Create an invitation for a channel
+      description: Creates an invitation for the specified channel
+      security:
+        - BearerAuth: [ ]
+      parameters:
+        - name: channelId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+          description: Unique identifier for the channel
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationInput'
+      responses:
+        '201':
+          description: Invitation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '404':
+          description: Channel not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      description: Bearer Token needed to access the endpoints
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user
+        username:
+          type: string
+          description: Username of the user
+        passwordValidation:
+          type: object
+          properties:
+            validationInfo:
+              type: string
+              description: Information regarding password validation
+          required:
+            - validationInfo
+      required:
+        - id
+        - username
+        - passwordValidation
+
+    UserHomeOutput:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the user
+        username:
+          type: string
+          description: Username of the user
+      required:
+        - id
+        - username
+
+    UserInput:
+      type: object
+      properties:
+        username:
+          type: string
+          description: Username of the user
+        password:
+          type: string
+          description: Password of the user
+      required:
+        - username
+        - password
+
+    Channel:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the channel
+        name:
+          type: string
+          description: Name of the channel
+        owner:
+          $ref: '#/components/schemas/User'
+        isPublic:
+          type: boolean
+          description: Indicates if the channel is public
+          default: true
+      required:
+        - id
+        - name
+        - owner
+
+    ChannelInput:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Name of the channel
+        isPublic:
+          type: boolean
+          description: Indicates if the channel is public
+      required:
+        - name
+        - isPublic
+
+    JoinChannelInput:
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token for joining the channel
+        action:
+          type: string
+          description: Action to be performed (e.g., accept, reject)
+          enum:
+            - PENDING
+            - ACCEPTED
+            - REJECTED
+      required:
+        - token
+        - action
+
+    Message:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the message
+        content:
+          type: string
+          description: Content of the message
+        user:
+          $ref: '#/components/schemas/User'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the message was created
+      required:
+        - id
+        - content
+        - user
+        - channel
+        - createdAt
+
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the invitation
+        token:
+          type: string
+          description: Token for the invitation
+        createdBy:
+          $ref: '#/components/schemas/User'
+        channel:
+          $ref: '#/components/schemas/Channel'
+        accessType:
+          type: string
+          description: Type of access granted by the invitation
+          enum:
+            - READ_ONLY
+            - READ_WRITE
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration date and time of the invitation
+        status:
+          type: string
+          description: Status of the invitation
+          enum:
+            - PENDING
+            - ACCEPTED
+            - REJECTED
+      required:
+        - id
+        - token
+        - createdBy
+        - channel
+        - accessType
+        - expiresAt
+        - status
+
+    InvitationInput:
+      type: object
+      properties:
+        accessType:
+          type: string
+          description: Type of access granted by the invitation
+          enum:
+            - READ_ONLY
+            - READ_WRITE
+        expiresAt:
+          type: string
+          format: date-time
+          description: Expiration date and time of the invitation
+      required:
+        - accessType
+        - expiresAt
+
+    Problem:
+      type: object
+      properties:
+        type:
+          type: string
+          format: uri
+          description: URI reference that identifies the problem type
+        title:
+          type: string
+          description: Short, human-readable summary of the problem type
+      required:
+        - type
+        - title
