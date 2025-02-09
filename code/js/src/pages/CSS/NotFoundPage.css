@@ -1,0 +1,54 @@
+.not-found-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 80vh;
+    text-align: center;
+    padding: 20px;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+.not-found-title {
+    font-size: 3rem;
+    color: #333;
+    margin-bottom: 20px;
+}
+
+.not-found-message {
+    font-size: 1.2rem;
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.not-found-button {
+    padding: 10px 20px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.not-found-button:hover {
+    background-color: #0056b3;
+}
+
+.not-found-links {
+    font-size: 1rem;
+    color: #555;
+}
+
+.not-found-links a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+.not-found-links a:hover {
+    text-decoration: underline;
+}
+
+
